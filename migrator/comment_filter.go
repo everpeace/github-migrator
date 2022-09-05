@@ -44,38 +44,46 @@ func newUserMappingFilter(userMapping map[string]string, targetRepo *github.Repo
 		tos = append(tos, v)
 		userMappingRev[v] = k
 	}
-	re1 := regexp.MustCompile(buildPattern(froms))
-	re2 := regexp.MustCompile(buildPattern(tos))
-	re3 := regexp.MustCompile(`https?://[-.a-zA-Z0-9/_%]*` + buildPattern(tos))
-	targetURL, _ := url.Parse(targetRepo.HTMLURL)
+	re0 := regexp.MustCompile(`@[0-9a-zA-z\-]+`)
+	// re1 := regexp.MustCompile(buildPattern(froms))
+	// re2 := regexp.MustCompile(buildPattern(tos))
+	// re3 := regexp.MustCompile(`https?://[-.a-zA-Z0-9/_%]*` + buildPattern(tos))
+	// targetURL, _ := url.Parse(targetRepo.HTMLURL)
 	return commentFilter(func(src string) string {
-		src = re1.ReplaceAllStringFunc(src, func(from string) string {
-			return userMapping[from]
-		})
-		src = re3.ReplaceAllStringFunc(src, func(url string) string {
-			if strings.Contains(url, "://"+targetURL.Host+"/") {
-				return url
+		src = re0.ReplaceAllStringFunc(src, func(mention string) string {
+			mention = mention[1:]
+			if mapped, ok := userMapping[mention]; ok {
+				return "@" + mapped
 			}
-			return re2.ReplaceAllStringFunc(url, func(to string) string {
-				return userMappingRev[to]
-			})
+			return "ghost"
 		})
+		// src = re1.ReplaceAllStringFunc(src, func(from string) string {
+		// 	return userMapping[from]
+		// })
+		// src = re3.ReplaceAllStringFunc(src, func(url string) string {
+		// 	if strings.Contains(url, "://"+targetURL.Host+"/") {
+		// 		return url
+		// 	}
+		// 	return re2.ReplaceAllStringFunc(url, func(to string) string {
+		// 		return userMappingRev[to]
+		// 	})
+		// })
 		return src
 	})
 }
 
-func buildPattern(xs []string) string {
-	var pattern strings.Builder
-	pattern.WriteString(`\b(`)
-	for i, x := range xs {
-		if i > 0 {
-			pattern.WriteByte('|')
-		}
-		pattern.WriteString(regexp.QuoteMeta(x))
-	}
-	pattern.WriteString(`)\b`)
-	return pattern.String()
-}
+// func buildPattern(xs []string) string {
+// 	var pattern strings.Builder
+// 	pattern.WriteString(`\b(`)
+// 	for i, x := range xs {
+// 		if i > 0 {
+// 			pattern.WriteByte('|')
+// 		}
+// 		pattern.WriteString(regexp.QuoteMeta(x))
+// 	}
+// 	pattern.WriteString(`)\b`)
+// 	return pattern.String()
+// }
 
 type commentFilters []commentFilter
 

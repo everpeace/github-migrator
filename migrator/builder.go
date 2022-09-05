@@ -54,7 +54,7 @@ func (b *builder) build() (*github.Import, error) {
 		Labels:    b.buildImportLabels(b.issue),
 	}
 	if !b.skipAssignee && b.issue.Assignee != nil {
-		target := b.commentFilters.apply(b.issue.Assignee.Login)
+		target := b.getUserLogin(b.issue.Assignee)
 		isMember, err := b.isTargetMember(target)
 		if err != nil {
 			return nil, err
@@ -139,7 +139,7 @@ func (b *builder) buildCommitDetails() string {
 		commitRows = append(commitRows, []string{
 			html.EscapeString(c.Commit.Message) + "<br>\n" +
 				b.buildImageTag(committer, 16) +
-				fmt.Sprintf(" @%s committed%s", b.commentFilters.apply(committer.Login), dateString) +
+				fmt.Sprintf(" @%s committed%s", b.getUserLogin(committer), dateString) +
 				fmt.Sprintf(` <a href="%s">%s</a>`, b.commentFilters.apply(c.HTMLURL), c.SHA[:7]),
 		})
 	}
@@ -328,5 +328,9 @@ func (b *builder) getUserLogin(user *github.User) string {
 	if user == nil {
 		return "ghost"
 	}
-	return b.commentFilters.apply(user.Login)
+	if _, ok := b.userMapping[user.Login]; !ok {
+		return "ghost"
+	}
+
+	return b.userMapping[user.Login]
 }

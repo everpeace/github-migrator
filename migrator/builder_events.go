@@ -233,7 +233,7 @@ func (b *builder) buildImportEventGroupBody(eg []*github.Event) (string, error) 
 				actions = append(actions,
 					fmt.Sprintf(
 						`dismissed @%s's review<br>%s`,
-						b.commentFilters.apply(target.Login),
+						b.getUserLogin(target),
 						html.EscapeString(e.DismissedReview.DismissalMessage),
 					),
 				)
@@ -364,7 +364,7 @@ func (b *builder) mentionAll(users []*github.User) string {
 		if i > 0 {
 			s += " "
 		}
-		s += "@" + b.commentFilters.apply(u.Login)
+		s += "@" + b.getUserLogin(u)
 	}
 	return s
 }
